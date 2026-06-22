@@ -401,11 +401,92 @@ class BookStore() :
             print(f"Error processing return: {e}")
 
     def viewBorrowedBook(self):
-        print("\n")
+        print("\n=== CURRENTLY BORROWED BOOKS ===")
+
+        borrowedBooks = self.executeQuery("""SELECT bb.borrow_id, bb.borrower_name, bb.borrow_date, bb.due_date, 
+                                          ab.title, ab.author, ab.isbn, DATEDIFF(CURDATE(), bb.due_date) as days_overdue
+                                          FROM borrowedbooks bb JOIN availablebooks ab ON bb.book_id = ab.book_id
+                                          ORDER BY bb.due_date ASC""",
+                                          fetch=True)
+        if not borrowedBooks:
+            print("No currently borrowed books")
+            return
+        
+        print(f"\n{'BorrowID':<8} {'Borrower':<15} {'Title':<20} {'Borrow Date':<12} {'Due Date':<12} {'Overdue':<8}")
+        print("-" * 80)
+
+        for book in borrowedBooks:
+            # to many this time
+            borrow_date = book['borrow_date'].strftime('%Y-%m-%d') if book['borrow_date'] else 'N/A'
+            due_date = book['due_date'].strftime('%Y-%m-%d') if book['due_date'] else 'N/A'
+            overdue = book['days_overdue'] if book['days_overdue'] and book['days_overdue'] > 0 else 0
+            status = f"{overdue} days" if overdue > 0 else "On time"
+            print(f"{book['borrow_id']:<8} {book['borrower_name'][:14]:<15} {book['title'][:19]:<20} {borrow_date:<12} {due_date:<12} {status:<8}")
+
     def viewBorrowingHistory(self):
-        pass
+        print("\n=== BORROWING HISTORY ===")
+
+        history = self.executeQuery("""SELECT bs.borrow_id, bs.borrower_name, ab.title,
+                                    bs.borrow_date, bs.due_date, bs.return_date, bs.fine_amount, bs.total_amount
+                                    FROM borrowedbooksales bs JOIN availablebooks ab ON bs.book_id = ab.book_id
+                                    ORDER BY ab.return_date DESC
+                                    LIMIT 30""",fetch=True)
+        if not history:
+            print("No borrowing history found")
+            return
+        
+        print(f"\n{'BorrowID':<8} {'Borrower':<15} {'Title':<20} {'Borrow Date':<12} {'Return Date':<12} {'Fine':<10}")
+
+        for record in history:
+            borrow_date = record['borrow_date'].strftime('%Y-%m-%d') if record['borrow_date'] else 'N/A'
+            return_date = record['return_date'].strftime('%Y-%m-%d') if record['return_date'] else 'N/A'
+            fine = f"₹{record['fine_amount']:.2f}" if record['fine_amount'] and record['fine_amount'] > 0 else "None"
+            print(f"{record['borrow_id']:<8} {record['borrower_name'][:14]:<15} {record['title'][:19]:<20} {borrow_date:<12} {return_date:<12} {fine:<10}")
+
+def viewSalesHistory(self): 
+    print("\n=== SALES HISTORY ===")
+
+    history = self.executeQuery("""
+        SELECT s.sale_id, s.customer_name,ab.title,
+               s.sale_date,
+               s.quantity_sold,
+               s.unit_price,
+               s.total_amount
+        FROM soldbooksales s
+        JOIN availablebooks ab ON s.book_id = ab.book_id
+        ORDER BY s.sale_date DESC
+        LIMIT 30
+    """, fetch=True)
+
+    if not history:
+        print("No sales history found")
+        return
+
+    print(f"\n{'SaleID':<8} {'Customer':<15} {'Title':<20} {'Date':<12} {'Qty':<5} {'Amount':<10}")
+    print("-" * 80)
+
+    for record in history:
+        sale_date = record['sale_date'].strftime('%Y-%m-%d') if record['sale_date'] else 'N/A'
+        print(
+            f"{record['sale_id']:<8} {record['customer_name'][:14]:<15} {record['title'][:19]:<20} {sale_date:<12} {record['quantity_sold']:<5} ₹{record['total_amount']:<9.2f}"
+        )
+
     def viewLowStock(self):
-        pass
+        print("\n=== LOW STOCK ALERT ===")
+
+        books = self.executeQuery("SELECT * FROM available books WHERE quantity < %s ORDER BY quantity ASC",
+                                  (os.getenv("LOW_STOCK")))
+        
+        if not books:
+            print("No books with low stock!")
+            return
+        
+        print(f"\n{'ID':<4} {'Title':<30} {'Author':<20} {'Qty':<4} {'Price':<10}")
+        print("-" * 75)
+        for book in books:
+            print(f"{book['book_id']:<4} {book['title'][:29]:<30} {book['author'][:19]:<20} "
+                  f"{book['quantity']:<4} ₹{book['price']:<9}")
+
     def displayMenu(self):
         print("\n" + "="*60)
         print("         BOOK STORE MANNAGEMENT SYSTEM")
@@ -422,8 +503,9 @@ class BookStore() :
         print("10. Return Books")
         print("11. View Currently Borrowed Books")
         print("12. View Borrowing History")
-        print("13. View Low Stock")
-        print("14. Exit")
+        print("13. View Sales History")
+        print("14. View Low Stock")
+        print("15. Exit")
         print("-"*60)
 
 
@@ -464,8 +546,10 @@ def main():
         elif choice == 12:
             bookstore.viewBorrowingHistory()
         elif choice == 13:
-            bookstore.viewLowStock()
+            bookstore.viewSalesHistory()
         elif choice == 14:
+            bookstore.viewLowStock()
+        elif choice == 15:
             print("Thank you for using Book Store Management Syatem")
             bookstore.disconnect()
             break
