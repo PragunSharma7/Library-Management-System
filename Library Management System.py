@@ -443,33 +443,24 @@ class BookStore() :
             fine = f"₹{record['fine_amount']:.2f}" if record['fine_amount'] and record['fine_amount'] > 0 else "None"
             print(f"{record['borrow_id']:<8} {record['borrower_name'][:14]:<15} {record['title'][:19]:<20} {borrow_date:<12} {return_date:<12} {fine:<10}")
 
-def viewSalesHistory(self): 
-    print("\n=== SALES HISTORY ===")
+    def viewSalesHistory(self): 
+        print("\n=== SALES HISTORY ===")
 
-    history = self.executeQuery("""
-        SELECT s.sale_id, s.customer_name,ab.title,
-               s.sale_date,
-               s.quantity_sold,
-               s.unit_price,
-               s.total_amount
-        FROM soldbooksales s
-        JOIN availablebooks ab ON s.book_id = ab.book_id
-        ORDER BY s.sale_date DESC
-        LIMIT 30
-    """, fetch=True)
+        history = self.executeQuery("""SELECT s.sale_id, s.customer_name, ab.title, s.sale_date,
+                                    s.quantity_sold, s.unit_price, s.total_amount
+                                    FROM soldbooksales s JOIN availablebooks ab ON s.book_id = ab.book_id
+                                    ORDER BY s.sale_date DESC LIMIT 30 """, fetch=True)
 
-    if not history:
-        print("No sales history found")
-        return
+        if not history:
+            print("No sales history found")
+            return
 
-    print(f"\n{'SaleID':<8} {'Customer':<15} {'Title':<20} {'Date':<12} {'Qty':<5} {'Amount':<10}")
-    print("-" * 80)
+        print(f"\n{'SaleID':<8} {'Customer':<15} {'Title':<20} {'Date':<12} {'Qty':<5} {'Amount':<10}")
+        print("-" * 80)
 
-    for record in history:
-        sale_date = record['sale_date'].strftime('%Y-%m-%d') if record['sale_date'] else 'N/A'
-        print(
-            f"{record['sale_id']:<8} {record['customer_name'][:14]:<15} {record['title'][:19]:<20} {sale_date:<12} {record['quantity_sold']:<5} ₹{record['total_amount']:<9.2f}"
-        )
+        for record in history:
+            saleDate = record['saleDate'].strftime('%Y-%m-%d') if record['sale_date'] else 'N/A'
+            print(f"{record['sale_id']:<8} {record['customer_name'][:14]:<15} {record['title'][:19]:<20} {saleDate:<12} {record['quantity_sold']:<5} ₹{record['total_amount']:<9.2f}")
 
     def viewLowStock(self):
         print("\n=== LOW STOCK ALERT ===")
