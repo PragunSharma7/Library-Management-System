@@ -172,12 +172,6 @@ class BookStore() :
             return
         
         book = book[0]
-        print("\nCurrent Details:")
-        print(f"Title:   {book['title']}")
-        print(f"Author:  {book['author']}")
-        print(f"Price:   ₹{book['price']:.2f}")
-        print(f"Quality: {book['qantity']}")
-        print(f"Genre:   {book['genre']}")
 
         print("\nEnter new details (press Enter to keep current value)")
 
