@@ -9,11 +9,97 @@ from InquirerPy.utils import get_style
 
 load_dotenv()
 
-MENU_STYLE = get_style({"questionmark": "#e5c07b", 
-                        "question": "#ffffff bold",     
-                        "pointer": "#61afef bold",    
-                        "answer": "#61afef",},
-                        style_override=True)
+MENU_STYLE = get_style({
+    "questionmark": "#e5c07b", 
+    "question": "#ffffff bold",     
+    "pointer": "#61afef bold",    
+    "answer": "#61afef",
+    }, style_override=True)
+
+def configureSetting():
+    def isFloatP(x):
+        try: 
+            return float(x)>0
+        except ValueError:
+            return False
+
+    dbHost = inquirer.text(
+        message = "DB_HOST: ",
+        default = os.getenv('DB_HOST') or '',
+        style = MENU_STYLE
+    ).execute()
+    dbUser = inquirer.text(
+        message = "DB_USER: ",
+        default = os.getenv('DB_USER') or '',
+        style = MENU_STYLE
+    ).execute()
+    dbPassword = inquirer.text(
+        message = "DB_PASSWORD: ",
+        default = os.getenv('DB_PASSWORD') or '',
+        style = MENU_STYLE
+    ).execute()
+    dbName = inquirer.text(
+        message = "DB_NAME: ",
+        default = os.getenv('DB_NAME') or '',
+        style = MENU_STYLE
+    ).execute()
+    lowStock = inquirer.text(
+        message = "LOW_STOCK: ",
+        default = os.getenv('LOW_STOCK') or '',
+        validate =lambda x: x.isdigit() and int(x)>0,
+        invalid_message = "Must be positive integer",
+        style = MENU_STYLE
+    ).execute()
+    finePerDay = inquirer.text(
+        message = "FINE_PER_DAY: ",
+        default = os.getenv('FINE_PER_DAY') or '',
+        validate = isFloatP,
+        invalid_message = "Must be positive number",
+        style = MENU_STYLE
+    ).execute()
+    borrowFeePerDay = inquirer.text(
+        message = "BOWWOW_FEE_PER_DAY: ",
+        default = os.getenv('BORROW_FEE_PER_DAY') or '',
+        validate = isFloatP,
+        invalid_message = "Must be positive number",
+        style = MENU_STYLE
+    ).execute()
+
+    setting = {
+        'DB_HOST': dbHost,
+        'DB_USER': dbUser,
+        'DB_PASSWORD': dbPassword,
+        'DB_NAME': dbName,
+        'LOW_STOCK': lowStock,
+        'FINE_PER_DAY': finePerDay,
+        'BORROW_FEE_PER_DAY': borrowFeePerDay
+    }
+
+    with open('.env','w',encoding='utf-8') as env:
+        for key in setting:
+            env.write(f"{key}={setting[key]}\n")
+
+    load_dotenv(override=True)
+    
+    print("Settings Updated")
+
+def validateSettings():
+
+    required = [
+        'DB_HOST',
+        'DB_USER',
+        'DB_PASSWORD',
+        'DB_NAME',
+        'LOW_STOCK',
+        'FINE_PER_DAY',
+        'BORROW_FEE_PER_DAY'
+    ]
+
+    for key in required:
+        value = os.getenv(key)
+        if value is None or value.strip() == '':
+            configureSetting()
+            return
 
 class BookStore() :
     def __init__(self):
@@ -41,7 +127,7 @@ class BookStore() :
             self.cursor.close()
             self.connection.close()
 
-    def executeQuery(self, query, params=None,fetch=False):
+    def executeQuery(self, query, params = None, fetch = False):
         try:
             self.cursor.execute(query, params or tuple())
 
@@ -59,21 +145,21 @@ class BookStore() :
     def addBook(self):
         print("\n=== ADD NEW BOOK ===")
 
-        title = inquirer.text("Enter book title: ",style=MENU_STYLE).execute()
-        author = inquirer.text("Enter author: ",style=MENU_STYLE).execute()
-        isbn = inquirer.text("Enter ISBN: ",style=MENU_STYLE).execute()
+        title = inquirer.text("Enter book title: ", style = MENU_STYLE).execute()
+        author = inquirer.text("Enter author: ", style = MENU_STYLE).execute()
+        isbn = inquirer.text("Enter ISBN: ", style = MENU_STYLE).execute()
 
         existing = self.executeQuery("""SELECT book_id FROM availablebooks 
-                                     WHERE isbn = %s""",(isbn,), fetch=True)
+                                     WHERE isbn = %s""",(isbn,), fetch = True)
         
         if existing:
             print("Error: A book with this ISBN already exists")
             return
         
         try:
-            price = float(inquirer.text("Enter price (₹): ",style=MENU_STYLE).execute())
-            quantity = int(inquirer.text("Enter quantity: ",style=MENU_STYLE).execute())
-            genre = inquirer.text("Enter genre: ",style=MENU_STYLE).execute()
+            price = float(inquirer.text("Enter price (₹): ", style = MENU_STYLE).execute())
+            quantity = int(inquirer.text("Enter quantity: ", style = MENU_STYLE).execute())
+            genre = inquirer.text("Enter genre: ", style = MENU_STYLE).execute()
         except ValueError:
             print("Error: Please enter Valid numeric quantities for Pries and Quantity")
             return
@@ -90,7 +176,7 @@ class BookStore() :
         print("\n=== AVAILAVLE BOOK INVENTORY ===")
 
         books = self.executeQuery("SELECT * FROM availablebooks ORDER BY title",
-                                  fetch=True)
+                                  fetch = True)
         if not books:
             print("No books found in inventory")
             return
@@ -122,11 +208,11 @@ class BookStore() :
             },
             'ISBN': {
                 'prompt': "Enter isbn to search: ",
-                'query': "SELECT * FROM availablebooks WHERE isbn LIKE %s ORDER BY title",
-                'transform': lambda x : f"%{x}%"
+                'query': "SELECT * FROM availablebooks WHERE isbn = %s ORDER BY title",
+                'transform': lambda x : f"{x}"
             },
         }
-        print("Search by: 1.Title  2.Author 3.Genre  4.ISBN")
+
 
         choice = inquirer.select(
             message="Search books by:",
@@ -134,7 +220,7 @@ class BookStore() :
             default=0,
             pointer=" ➤",
             qmark="🔍",
-            style=MENU_STYLE
+            style = MENU_STYLE
         ).execute()
 
         config = search_options[choice]
@@ -146,7 +232,7 @@ class BookStore() :
         books = self.executeQuery(
             config["query"],
             (config["transform"](term),),
-            fetch=True
+            fetch = True
         )
 
         if not books:
@@ -162,11 +248,11 @@ class BookStore() :
         print("\n=== UPDATE BOOKS ===")
 
         try:
-            bookId = int(inquirer.text("Enter book ID to update: ",style=MENU_STYLE).execute())
+            bookId = int(inquirer.text("Enter book ID to update: ", style = MENU_STYLE).execute())
         except ValueError:
             print("Please enter a valid number")
             return
-        book = self.executeQuery("SELECT * FROM availablebooks WHERE book_id = %s",(bookId,),fetch=True)
+        book = self.executeQuery("SELECT * FROM availablebooks WHERE book_id = %s",(bookId,), fetch = True)
         if not book:
             print("Book not found")
             return
@@ -176,20 +262,20 @@ class BookStore() :
         print("\nEnter new details (press Enter to keep current value)")
 
         title = inquirer.text("Title: ",
-                              default=str(book['title']),
-                              style=MENU_STYLE).execute()
+                              default = str(book['title']),
+                              style = MENU_STYLE).execute()
         author = inquirer.text("Author: ",
-                               default=str(book['author']),
-                               style=MENU_STYLE).execute()
+                               default = str(book['author']),
+                               style = MENU_STYLE).execute()
         price = inquirer.text("Price: ₹",
-                              default=str(book['price']),
-                              style=MENU_STYLE).execute() 
+                              default = str(book['price']),
+                              style = MENU_STYLE).execute() 
         quantity = inquirer.text("Quantity: ",
-                                 default=str(book['quantity']),
-                                 style=MENU_STYLE).execute() 
+                                 default = str(book['quantity']),
+                                 style = MENU_STYLE).execute() 
         genre = inquirer.text("Genre: ",
-                              default=str(book['genre'] or ""),
-                              style=MENU_STYLE).execute() 
+                              default = str(book['genre'] or ""),
+                              style = MENU_STYLE).execute() 
 
         if self.executeQuery("""UPDATE availablebooks 
                              SET title = %s, author = %s, price = %s, quantity = %s, genre = %s
@@ -202,21 +288,21 @@ class BookStore() :
     def deleteBook(self):
         print("\n=== DELETE BOOK ===")
         try:
-            bookId = int(inquirer.text("Enter book ID to delete: ",style=MENU_STYLE).execute())
+            bookId = int(inquirer.text("Enter book ID to delete: ", style = MENU_STYLE).execute())
         except ValueError:
             print("Please enter a valid number")
             return
     
         book = self.executeQuery("""SELECT title FROM availablebooks 
                                  WHERE book_id = %s""",
-                                 (bookId,), fetch=True)
+                                 (bookId,), fetch = True)
         if not book:
             print("Book not found")
             return
         
         print(f"Book to delete: {book[0]['title']}")
 
-        if inquirer.text("Are you sure you want to delete book? (y/n): ",style=MENU_STYLE).execute().lower() != 'y':
+        if inquirer.text("Are you sure you want to delete book? (y/n): ", style = MENU_STYLE).execute().lower() != 'y':
             print("Deletion cancelled")
             return
 
@@ -228,11 +314,11 @@ class BookStore() :
 
     def sellBook(self):
         print("\n=== SELL BOOK ===")
-        bookId = int(inquirer.text("Enter book ID to sell: ",style=MENU_STYLE).execute())
+        bookId = int(inquirer.text("Enter book ID to sell: ", style = MENU_STYLE).execute())
 
         try:
             book = self.executeQuery("SELECT * FROM availablebooks WHERE book_id = %s",
-                                    (bookId,),fetch=True)
+                                    (bookId,), fetch = True)
         except Error as e:
             print(f"Error in finding book: {e}")
             return
@@ -248,7 +334,7 @@ class BookStore() :
 
         
         try:
-            quantitySold = int(inquirer.text("Enter quantity to sell: ",style=MENU_STYLE).execute())
+            quantitySold = int(inquirer.text("Enter quantity to sell: ", style = MENU_STYLE).execute())
         except ValueError:
             print("Please enter a valid number")
             return
@@ -260,8 +346,8 @@ class BookStore() :
             print("Quantity can't be nagative")
             return
         
-        customerName = inquirer.text("Enter customer name: ",style=MENU_STYLE).execute()
-        customerEmail = inquirer.text("Enter customer email (optional): ",style=MENU_STYLE).execute()
+        customerName = inquirer.text("Enter customer name: ", style = MENU_STYLE).execute()
+        customerEmail = inquirer.text("Enter customer email (optional): ", style = MENU_STYLE).execute()
 
         totalAmount = quantitySold  * float(book['price'])
         saleDate = datetime.now().date()
@@ -289,7 +375,7 @@ class BookStore() :
                                       FROM soldbooksales s
                                       JOIN availablebooks b ON s.book_id = b.book_id
                                       WHERE s.sale_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                                      ORDER BY s.sale_date DESC""",fetch=True)
+                                      ORDER BY s.sale_date DESC""", fetch = True)
         borrowingRevenue = self.executeQuery("""SELECT bs.transaction_date as sale_date, ab.title, ab.author, 
                                              bs.borrower_name as customer_name, 1 as quantity_sold,
                                              bs.fine_amount as unit_price, bs.total_amount,
@@ -297,10 +383,10 @@ class BookStore() :
                                              FROM borrowedbooksales bs
                                              JOIN availablebooks ab ON bs.book_id = ab.book_id
                                              WHERE bs.total_amount > 0 AND bs.transaction_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                                             ORDER BY bs.transaction_date DESC""", fetch=True)
+                                             ORDER BY bs.transaction_date DESC""", fetch = True)
         
         allTransactions = (bookSales or []) + (borrowingRevenue or [])
-        allTransactions.sort(key = lambda x: x['sale_date'], reversed=True)
+        allTransactions.sort(key = lambda x: x['sale_date'], reversed = True)
 
         print(f"\n{'Date':<12} {'Type':<20} {'Customer':<15} {'Qty':<4} {'Amount':<10}")
         print("-" * 85)
@@ -327,7 +413,7 @@ class BookStore() :
                                       s.quantity_sold, s.unit_price, s.total_amount, s.sale_date
                                       FROM soldbooksales s JOIN availablebooks b ON s.book_id = b.book_id
                                       WHERE s.sale_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                                      ORDER BY s.sale_date DESC""", fetch=True)
+                                      ORDER BY s.sale_date DESC""", fetch = True)
         print(f"\n{'Date':<12} {'Title':<20} {'Customer':<15} {'Qty':<4} {'Price':<8} {'Total':<10}")
         print("-" * 75)
         totalSalesRevenue, totalBorrowingRevenue = 0, 0
@@ -344,7 +430,7 @@ class BookStore() :
                                              FROM borrowedbooksales bs
                                              JOIN availablebooks ab ON bs.book_id = ab.book_id
                                              WHERE bs.total_amount > 0 and bs.transaction_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                                             ORDER BY bs.transaction_date DESC""", fetch=True)
+                                             ORDER BY bs.transaction_date DESC""", fetch = True)
         print(f"\n{'Date':<12} {'Title':<20} {'Borrower':<15} {'Days':<4} {'Fine':<10}")
         print('-'*70)
         for item in (borrowingRevenue or []):
@@ -361,7 +447,7 @@ class BookStore() :
 
     def borrowBook(self):
         print("\n=== BORROW BOOK ===")
-        bookId= int(inquirer.text("Enter book ID to borrow: ",style=MENU_STYLE).execute())
+        bookId= int(inquirer.text("Enter book ID to borrow: ", style = MENU_STYLE).execute())
 
         book = self.executeQuery("SELECT * FROM availablebooks WHERE book_id = %s",
                                  (bookId,), fetch = True)
@@ -376,18 +462,18 @@ class BookStore() :
         
         print(f"Book: {book['title']} by {book['author']}")
 
-        borroweName = inquirer.text("Enter borrower name: ",style=MENU_STYLE).execute()
-        borroweEmail = inquirer.text("Enter borrower email: ",style=MENU_STYLE).execute()
-        borrowePhone = inquirer.text("Enter borrower phone: ",style=MENU_STYLE).execute()
+        borroweName = inquirer.text("Enter borrower name: ", style = MENU_STYLE).execute()
+        borroweEmail = inquirer.text("Enter borrower email: ", style = MENU_STYLE).execute()
+        borrowePhone = inquirer.text("Enter borrower phone: ", style = MENU_STYLE).execute()
 
         try:
-            borrowDays = int(inquirer.text("Enter number of days to borrow: ",style=MENU_STYLE).execute())
+            borrowDays = int(inquirer.text("Enter number of days to borrow: ", style = MENU_STYLE).execute())
         except ValueError:
             print("Please enter a valid number")
             return
 
         borrowDate = datetime.now().date()
-        dueDate = borrowDate + timedelta(days=borrowDays)
+        dueDate = borrowDate + timedelta(days = borrowDays)
 
         try:
             self.cursor.execute("UPDATE availablebooks SET quantity = quantity - 1 WHERE book_id = %s",
@@ -406,7 +492,7 @@ class BookStore() :
     def returnBook(self):
         print("\n=== RETURN BORROWED BOOK ===")
         try:
-            borrowId = int(inquirer.text("Enter borrow ID to return",style=MENU_STYLE).execute())
+            borrowId = int(inquirer.text("Enter borrow ID to return", style = MENU_STYLE).execute())
         except ValueError:
             print("Please enter a valid number")
             return
@@ -415,7 +501,7 @@ class BookStore() :
                                          FROM borrowedbooks bb 
                                          JOIN availablebooks ab ON bb.book_id = ab.book_id 
                                          WHERE bb.borrow_id = %s""",
-                                         (borrowId,),fetch=True)
+                                         (borrowId,), fetch = True)
         if not borrowRecord:
             print("Borrow record not found")
             return
@@ -463,7 +549,7 @@ class BookStore() :
                                           ab.title, ab.author, ab.isbn, DATEDIFF(CURDATE(), bb.due_date) as days_overdue
                                           FROM borrowedbooks bb JOIN availablebooks ab ON bb.book_id = ab.book_id
                                           ORDER BY bb.due_date ASC""",
-                                          fetch=True)
+                                          fetch = True)
         if not borrowedBooks:
             print("No currently borrowed books")
             return
@@ -486,7 +572,7 @@ class BookStore() :
                                     bs.borrow_date, bs.due_date, bs.return_date, bs.fine_amount, bs.total_amount
                                     FROM borrowedbooksales bs JOIN availablebooks ab ON bs.book_id = ab.book_id
                                     ORDER BY bs.return_date DESC
-                                    LIMIT 30""",fetch=True)
+                                    LIMIT 30""", fetch = True)
         if not history:
             print("No borrowing history found")
             return
@@ -505,7 +591,7 @@ class BookStore() :
         history = self.executeQuery("""SELECT s.sale_id, s.customer_name, ab.title, s.sale_date,
                                     s.quantity_sold, s.unit_price, s.total_amount
                                     FROM soldbooksales s JOIN availablebooks ab ON s.book_id = ab.book_id
-                                    ORDER BY s.sale_date DESC LIMIT 30 """, fetch=True)
+                                    ORDER BY s.sale_date DESC LIMIT 30 """, fetch = True)
 
         if not history:
             print("No sales history found")
@@ -522,7 +608,7 @@ class BookStore() :
         print("\n=== LOW STOCK ALERT ===")
 
         books = self.executeQuery("SELECT * FROM availablebooks WHERE quantity < %s ORDER BY quantity ASC",
-                                  (int(os.getenv("LOW_STOCK")),),fetch=True)
+                                  (int(os.getenv("LOW_STOCK")),), fetch = True)
         
         if not books:
             print("No books with low stock!")
@@ -531,49 +617,31 @@ class BookStore() :
         print(f"\n{'ID':<4} {'Title':<30} {'Author':<20} {'Qty':<4} {'Price':<10}")
         print("-" * 75)
         for book in books:
-            print(f"{book['book_id']:<4} {book['title'][:29]:<30} {book['author'][:19]:<20} "
-                  f"{book['quantity']:<4} ₹{book['price']:<9}")
-
-    def displayMenu(self):
-        print("\n" + "="*60)
-        print("         BOOK STORE MANNAGEMENT SYSTEM")
-        print("="*60)
-        print("1.  Add New Book")
-        print("2.  View All Available Books")
-        print("3.  Search Books")
-        print("4.  Update Books")
-        print("5.  Delete Book")
-        print("6.  Sell Book")
-        print("7.  View Revenue Report")
-        print("8.  View Revenue Report (Seperate)")
-        print("9.  Borrow Books")
-        print("10. Return Books")
-        print("11. View Currently Borrowed Books")
-        print("12. View Borrowing History")
-        print("13. View Sales History")
-        print("14. View Low Stock")
-        print("15. Exit")
-        print("-"*60)
-
+            print(f"{book['book_id']:<4} {book['title'][:29]:<30} {book['author'][:19]:<20} {book['quantity']:<4} ₹{book['price']:<9}")
 
 def main():
+    validateSettings()
+
     bookstore = BookStore()
 
-    menu = {"Add Book": bookstore.addBook,
-            "View Books": bookstore.viewAvaliable,
-            "Search Books": bookstore.searchBook,
-            "Update Books": bookstore.updateBook,
-            "Delete Book": bookstore.deleteBook,
-            "Sell Book": bookstore.sellBook,
-            "View Revenue Report": bookstore.viewRevenueReport,
-            "View Revenue Report Seperate": bookstore.viewRevenueRepoartSeperate,
-            "Borrow Book": bookstore.borrowBook,
-            "Return Book": bookstore.returnBook,
-            "View Currently Borrowed Books": bookstore.viewBorrowedBook,
-            "View Borrowing History": bookstore.viewBorrowingHistory,
-            "View Sales History": bookstore.viewSalesHistory,
-            "View Low Stock": bookstore.viewLowStock,
-            "Exit": lambda: (None),}
+    menu = {
+        "Add Book": bookstore.addBook,
+        "View Books": bookstore.viewAvaliable,
+        "Search Books": bookstore.searchBook,
+        "Update Books": bookstore.updateBook,
+        "Delete Book": bookstore.deleteBook,
+        "Sell Book": bookstore.sellBook,
+        "View Revenue Report": bookstore.viewRevenueReport,
+        "View Revenue Report Seperate": bookstore.viewRevenueRepoartSeperate,
+        "Borrow Book": bookstore.borrowBook,
+        "Return Book": bookstore.returnBook,
+        "View Currently Borrowed Books": bookstore.viewBorrowedBook,
+        "View Borrowing History": bookstore.viewBorrowingHistory,
+        "View Sales History": bookstore.viewSalesHistory,
+        "View Low Stock": bookstore.viewLowStock,
+        "Setting": configureSetting,
+        "Exit": lambda: (None),
+        }
 
     if not bookstore.connection.is_connected():
         print("Failed to connect. Please check the MySQL configurations")
@@ -583,12 +651,12 @@ def main():
 
     while True:
         choice = inquirer.select(
-            message="BOOK STORE MANAGEMENT SYSTEM",
-            choices=list(menu.keys()),
-            default=0,
-            pointer=" ➤",
-            qmark="📚",
-            style=MENU_STYLE,
+            message = "BOOK STORE MANAGEMENT SYSTEM",
+            choices = list(menu.keys()),
+            default = 0,
+            pointer = " ➤",
+            qmark = "📚",
+            style = MENU_STYLE,
         ).execute()
 
         if choice == "Exit":
