@@ -32,7 +32,7 @@ CREATE TABLE soldbooksales (
     customer_name VARCHAR(255) NOT NULL,
     customer_email VARCHAR(255),
     quantity_sold INT NOT NULL,
-    sale_date DATE,
+    sale_date DATE  DATE NOT NULL DEFAULT (CURRENT_DATE),
     unit_price DECIMAL(10, 2) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL
 );
