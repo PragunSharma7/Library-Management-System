@@ -59,7 +59,7 @@ INSERT INTO availablebooks (book_id, title, author, isbn, price, quantity, genre
 (4,'Pride and Prejudice','Jane Austen','9780141439518',829.17,18,'Romance'),
 (5,'The Hobbit','J.R.R. Tolkien','9780547928227',1307.25,10,'Fantasy'),
 (6,'The Catcher in the Rye','J.D. Salinger','9780316769174',933.75,8,'Fiction'),
-(7,'Harry Potter and the Sorcerer\'s Stone','J.K. Rowling','9780590353427',1576.17,25,'Fantasy'),
+(7,'Harry Potter and the Sorcerers Stone','J.K. Rowling','9780590353427',1576.17,25,'Fantasy'),
 (8,'The Da Vinci Code','Dan Brown','9780307474278',1161.17,14,'Mystery'),
 (9,'The Alchemist','Paulo Coelho','9780061122415',1037.50,22,'Fiction'),
 (10,'The Hunger Games','Suzanne Collins','9780439023481',995.17,16,'Dystopian'),
@@ -70,35 +70,51 @@ INSERT INTO availablebooks (book_id, title, author, isbn, price, quantity, genre
 (15,'The Book Thief','Markus Zusak','9780375831003',1058.25,6,'Historical Fiction');
 
 INSERT INTO borrowedbooks (borrow_id, book_id, borrower_name, borrower_email, borrower_phone, borrow_date, due_date) VALUES
-(1,3,'John Smith','john.smith@email.com','555-0101','2025-01-15','2025-02-15'),
-(2,7,'Sarah Johnson','sarah.j@email.com','555-0102','2025-01-18','2025-02-18'),
-(3,11,'Mike Wilson','mike.wilson@email.com','555-0103','2025-01-20','2025-02-20'),
-(4,5,'Emily Davis','emily.davis@email.com','555-0104','2025-01-22','2025-02-22'),
-(5,9,'David Brown','david.b@email.com','555-0105','2025-01-25','2025-02-25'),
-(6,2,'Lisa Anderson','lisa.a@email.com','555-0106','2025-01-28','2025-02-28'),
-(7,14,'Robert Taylor','robert.t@email.com','555-0107','2025-01-30','2025-03-01'),
-(8,8,'Jennifer Martinez','jennifer.m@email.com','555-0108','2025-02-01','2025-03-03');
+(1,3,'John Smith','john.smith@email.com','555-0101','2026-06-15','2025-06-22'),
+(2,7,'Sarah Johnson','sarah.j@email.com','555-0102','2025-06-23','2025-06-02'),
+(3,11,'Mike Wilson','mike.wilson@email.com','555-0103','2025-06-28','2025-06-04'),
+(4,5,'Emily Davis','emily.davis@email.com','555-0104','2025-06-03','2025-06-09'),
+(5,9,'David Brown','david.b@email.com','555-0105','2025-06-10','2025-06-20'),
+(6,2,'Lisa Anderson','lisa.a@email.com','555-0106','2025-06-16','2025-06-23'),
+(7,14,'Robert Taylor','robert.t@email.com','555-0107','2025-06-22','2025-06-29'),
+(8,8,'Jennifer Martinez','jennifer.m@email.com','555-0108','2025-06-25','2025-07-09');
 
 INSERT INTO borrowedbooksales (borrow_sale_id, borrow_id, book_id, borrower_name, borrower_email, borrower_phone, borrow_date, due_date, return_date, fine_amount, total_amount, transaction_date) VALUES
-(11,101,1,'Tom Harris','tom.harris@email.com','555-0201','2024-12-01','2024-12-15','2024-12-14',0.00,0.00,'2024-12-14'),
-(12,102,4,'Nancy Green','nancy.green@email.com','555-0202','2024-12-05','2024-12-19','2024-12-20',50.00,50.00,'2024-12-20'),
-(13,103,6,'Paul King','paul.king@email.com','555-0203','2024-12-10','2024-12-24','2024-12-23',0.00,0.00,'2024-12-23'),
-(14,104,10,'Rachel Scott','rachel.scott@email.com','555-0204','2024-12-15','2024-12-29','2025-01-02',200.00,200.00,'2025-01-02'),
-(15,105,12,'Steven Young','steven.young@email.com','555-0205','2024-12-20','2025-01-03','2025-01-03',0.00,0.00,'2025-01-03'),
-(16,106,13,'Amanda Walker','amanda.walker@email.com','555-0206','2024-12-25','2025-01-08','2025-01-10',100.00,100.00,'2025-01-10'),
-(17,107,15,'Brian Allen','brian.allen@email.com','555-0207','2024-12-28','2025-01-11','2025-01-11',0.00,0.00,'2025-01-11'),
-(18,108,2,'Michelle Lewis','michelle.lewis@email.com','555-0208','2025-01-02','2025-01-16','2025-01-15',0.00,0.00,'2025-01-15'),
-(19,109,5,'Jason Wright','jason.wright@email.com','555-0209','2025-01-05','2025-01-19','2025-01-22',150.00,150.00,'2025-01-22'),
-(20,110,8,'Karen Hall','karen.hall@email.com','555-0210','2025-01-08','2025-01-22','2025-01-21',0.00,0.00,'2025-01-21');
+(11,101,1,'Tom Harris','tom.harris@email.com','555-0201','2024-05-11','2024-05-18','2024-05-17',0.00,35.00,'2024-05-17'),
+(12,102,4,'Nancy Green','nancy.green@email.com','555-0202','2024-05-13','2024-05-20','2024-05-20',0.00,35.00,'2024-05-20'),
+(13,103,6,'Paul King','paul.king@email.com','555-0203','2024-05-17','2024-05-24','2024-05-24',0.00,35.00,'2024-05-24'),
+(14,104,10,'Rachel Scott','rachel.scott@email.com','555-0204','2024-05-22','2024-05-29','2025-05-31',20.00,55.00,'2025-05-31'),
+(15,105,12,'Steven Young','steven.young@email.com','555-0205','2024-06-01','2025-06-08','2025-06-06',0.00,35.00,'2025-05-06'),
+(16,106,13,'Amanda Walker','amanda.walker@email.com','555-0206','2024-06-03','2025-06-10','2025-06-11',10.00,45.00,'2025-06-11'),#
+(17,107,15,'Brian Allen','brian.allen@email.com','555-0207','2024-06-08','2025-06-15','2025-06-15',0.00,35.00,'2025-06-15'),
+(18,108,2,'Michelle Lewis','michelle.lewis@email.com','555-0208','2025-06-13','2025-06-19','2025-06-19',0.00,30.00,'2025-06-19'),
+(19,109,5,'Jason Wright','jason.wright@email.com','555-0209','2025-06-13','2025-06-20','2025-06-21',10.00,45.00,'2025-06-21'),
+(20,110,8,'Karen Hall','karen.hall@email.com','555-0210','2025-05-19','2025-06-25','2025-06-25',0.00,30.00,'2025-06-25');
 
 INSERT INTO soldbooksales (sale_id, book_id, customer_name, customer_email, quantity_sold, sale_date, unit_price, total_amount) VALUES
-(1,1,'Alice Cooper','alice.cooper@email.com',1,'2025-01-10',1078.17,1078.17),
-(2,4,'Bob Richardson','bob.richardson@email.com',2,'2025-01-12',829.17,1658.34),
-(3,6,'Carol White','carol.white@email.com',1,'2025-01-14',933.75,933.75),
-(4,10,'Daniel Clark','daniel.clark@email.com',3,'2025-01-16',995.17,2985.51),
-(5,12,'Eva Garcia','eva.garcia@email.com',1,'2025-01-18',1369.50,1369.50),
-(6,13,'Frank Miller','frank.miller@email.com',2,'2025-01-20',2074.17,4148.34),
-(7,15,'Grace Lee','grace.lee@email.com',1,'2025-01-22',1058.25,1058.25),
-(8,1,'Henry Adams','henry.adams@email.com',1,'2025-01-25',1078.17,1078.17),
-(9,3,'Irene Scott','irene.scott@email.com',1,'2025-01-28',912.17,912.17),
-(10,7,'Kevin Hall','kevin.hall@email.com',2,'2025-02-01',1576.17,3152.34);
+(1,1,'Alice Cooper','alice.cooper@email.com',1,'2025-05-11',1078.17,1078.17),
+(2,4,'Bob Richardson','bob.richardson@email.com',2,'2025-05-15',829.17,1658.34),
+(3,6,'Carol White','carol.white@email.com',1,'2025-05-28',933.75,933.75),
+(4,10,'Daniel Clark','daniel.clark@email.com',3,'2025-06-02',995.17,2985.51),
+(5,12,'Eva Garcia','eva.garcia@email.com',1,'2025-06-09',1369.50,1369.50),
+(6,13,'Frank Miller','frank.miller@email.com',2,'2025-06-11',2074.17,4148.34),
+(7,15,'Grace Lee','grace.lee@email.com',1,'2025-06-14',1058.25,1058.25),
+(8,1,'Henry Adams','henry.adams@email.com',1,'2025-06-19',1078.17,1078.17),
+(9,3,'Irene Scott','irene.scott@email.com',1,'2025-06-22',912.17,912.17),
+(10,7,'Kevin Hall','kevin.hall@email.com',2,'2025-06-25',1576.17,3152.34);
+
+SET @offset = DATEDIFF(CURRENT_DATE, '2026-06-25');
+
+UPDATE soldbooksales
+SET sale_date = DATE_ADD(sale_date, INTERVAL @offset DAY);
+
+UPDATE borrowedbooks
+SET borrow_date = DATE_ADD(borrow_date, INTERVAL @offset DAY),
+    due_date = DATE_ADD(due_date, INTERVAL @offset DAY);
+
+UPDATE borrowedbooksales
+SET borrow_date = DATE_ADD(borrow_date, INTERVAL @offset DAY),
+    due_date = DATE_ADD(due_date, INTERVAL @offset DAY),
+    return_date = DATE_ADD(return_date, INTERVAL @offset DAY),
+    transaction_date = DATE_ADD(transaction_date, INTERVAL @offset DAY);
+
