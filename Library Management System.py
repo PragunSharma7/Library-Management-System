@@ -16,7 +16,13 @@ MENU_STYLE = get_style({
     "answer": "#61afef",
     }, style_override=True)
 
-def isFloatP(x):
+def isIntP(x): #is Integer Positive
+    try: 
+        return  x.isdigit() and int(x)>0
+    except ValueError:
+        return False
+
+def isFloatP(x): #is Float Positive
     try: 
         return float(x)>0
     except ValueError:
@@ -47,7 +53,7 @@ def configureSetting():
     lowStock = inquirer.text(
         message = "LOW_STOCK: ",
         default = os.getenv('LOW_STOCK') or '',
-        validate =lambda x: x.isdigit() and int(x)>0,
+        validate = isIntP,
         invalid_message = "Must be positive integer",
         style = MENU_STYLE
     ).execute()
@@ -172,7 +178,7 @@ class BookStore() :
             return
         
         print(f"\n{'ID':<4} {'Name':<30} {'Email':<30} {'Phone':<10} {'Created At':<12}")
-        print("-" * 86)
+        print("-" * 88)
 
         for customer in customers:
             print(f"{customer['customer_id']:<4} {customer['name'][:29]:<30} {customer['email'][:29]:<30} {customer['phone']:<10} {customer['created_at'].strftime('%Y-%m-%d'):<12}")
@@ -184,22 +190,30 @@ class BookStore() :
             'Name': {
                 'prompt': "Enter Name to search: ",
                 'query': "SELECT * FROM customers WHERE name LIKE %s ORDER BY name",
-                'transform': lambda x : f"%{x}%"
+                'transform': lambda x : f"%{x}%",
+                'validate': lambda x: True,
+                'invalid_message':""
             },
             'Email': {
                 'prompt': "Enter Email to search: ",
                 'query': "SELECT * FROM customers WHERE email LIKE %s ORDER BY name",
-                'transform': lambda x : f"%{x}%"
+                'transform': lambda x : f"%{x}%",
+                'validate': lambda x: True,
+                'invalid_message':""
             },
             'Phone': {
                 'prompt': "Enter Phone to search: ",
                 'query': "SELECT * FROM customers WHERE phone LIKE %s ORDER BY name",
-                'transform': lambda x : f"%{x}%"
+                'transform': lambda x : f"%{x}%",
+                'validate': lambda x: True,
+                'invalid_message':""
             },
             'Customer ID': {
                 'prompt': "Enter Customer ID to search: ",
                 'query': "SELECT * FROM customers WHERE customer_id = %s ORDER BY name",
-                'transform': lambda x : f"{x}"
+                'transform': lambda x : f"{x}",
+                'validate': isIntP,
+                'invalid_message':"Please enter valud number"
             },
         }
 
@@ -216,7 +230,9 @@ class BookStore() :
         config = search_options[choice]
 
         term = inquirer.text(
-            message=config["prompt"]
+            message = config["prompt"],
+            validate = config['validate'],
+            invalid_message = config['invalid_message']
         ).execute()
 
         customers = self.executeQuery(
@@ -230,7 +246,7 @@ class BookStore() :
             return
         
         print(f"\n{'ID':<4} {'Name':<30} {'Email':<30} {'Phone':<10} {'Created At':<12}")
-        print("-" * 86)
+        print("-" * 88)
 
         for customer in customers:
             print(f"{customer['customer_id']:<4} {customer['name'][:29]:<30} {customer['email'][:29]:<30} {customer['phone']:<10} {customer['created_at'].strftime('%Y-%m-%d'):<12}")
@@ -240,7 +256,7 @@ class BookStore() :
 
 
         customerId = int(inquirer.text("Enter Customer ID to update: ",
-                                    validate = lambda x: x.isdigit() and int(x)>0,
+                                    validate = isIntP,
                                     invalid_message = "Please enter a valid number",
                                     style = MENU_STYLE).execute())
 
@@ -274,8 +290,8 @@ class BookStore() :
     def deleteCustomer(self):
         print("\n=== DELETE CUSTOMER ===")
 
-        customerId = int(inquirer.text("Enter Customer ID to update: ",
-                                    validate = lambda x: x.isdigit() and int(x)>0,
+        customerId = int(inquirer.text("Enter Customer ID to delete: ",
+                                    validate = isIntP,
                                     invalid_message = "Please enter a valid number",
                                     style = MENU_STYLE).execute())
     
@@ -313,19 +329,15 @@ class BookStore() :
             print("Error: A book with this ISBN already exists")
             return
         
-        try:
-            price = float(inquirer.text("Enter price (₹): ",
-                                        validate = isFloatP,
+        price = float(inquirer.text("Enter price (₹): ",
+                                    validate = isFloatP,
+                                    invalid_message = "Please enter valid number",
+                                    style = MENU_STYLE).execute())
+        quantity = int(inquirer.text("Enter quantity: ", 
+                                        validate = isIntP,
                                         invalid_message = "Please enter valid number",
                                         style = MENU_STYLE).execute())
-            quantity = int(inquirer.text("Enter quantity: ", 
-                                         validate= lambda x: x.isdigit() and int(x)>0,
-                                         invalid_message = "Please enter valid number",
-                                         style = MENU_STYLE).execute())
-            genre = inquirer.text("Enter genre: ", style = MENU_STYLE).execute()
-        except ValueError:
-            print("Error: Please enter Valid numeric quantities for Pries and Quantity")
-            return
+        genre = inquirer.text("Enter genre: ", style = MENU_STYLE).execute()
         
         if self.executeQuery("""INSERT INTO books
                              (title, author, isbn, price, quantity, genre)
@@ -344,8 +356,8 @@ class BookStore() :
             print("No books found in inventory")
             return
         
-        print(f"\n{'ID':<4} {'Title':<30} {'Author':<20} {'Price':<10} {'Qty':<15} {'ISBN':<15} {'Genre':<15} {'From':<12}")
-        print("-" * 117)
+        print(f"\n{'ID':<4} {'Title':<30} {'Author':<20} {'Price':<10} {'Qty':<4} {'ISBN':<15} {'Genre':<15} {'From':<12}")
+        print("-" * 115)
 
         for book in books:
             print(f"{book['book_id']:<4} {book['title'][:29]:<30} {book['author'][:19]:<20} ₹{book['price']:<9.2f} {book['quantity']:<4} {book['isbn']:<15} {book['genre'] or 'N/A':<15} {book['created_at'].strftime('%Y-%m-%d'):12}")
@@ -382,8 +394,14 @@ class BookStore() :
                 'validate': lambda x: len(str(x)) > 0,
                 'invalid_message': "Please enter valid ISBN"
             },
+            'Book ID': {
+                'prompt': "Enter book id to search: ",
+                'query': "SELECT * FROM books WHERE book_id = %s ORDER BY title",
+                'transform': lambda x : f"{x}",
+                'validate': isIntP,
+                'invalid_message': "Please enter valid ISBN"
+            },
         }
-
 
         choice = inquirer.select(
             message="Search books by:",
@@ -397,9 +415,9 @@ class BookStore() :
         config = search_options[choice]
 
         term = inquirer.text(
-            message=config["prompt"],
-            validate=config["validate"],
-            invalid_message=config['invalid_message']
+            message = config["prompt"],
+            validate = config["validate"],
+            invalid_message = config['invalid_message']
         ).execute()
 
         books = self.executeQuery(
@@ -413,7 +431,7 @@ class BookStore() :
             return
         
         print(f"\n{'ID':<4} {'Title':<30} {'Author':<20} {'Price':<10} {'Qty':<4} {'ISBN':<15} {'Genre':<15} {'From':<12}")
-        print("-" * 107)
+        print("-" * 114)
         for book in books:
             print(f"{book['book_id']:<4} {book['title'][:29]:<30} {book['author'][:19]:<20} {book['price']:<9} {book['quantity']:<4} {book['isbn']:<15} {book['genre'] or 'N/A':<15} {book['created_at'].strftime('%Y-%m-%d'):12}")
         
@@ -421,7 +439,10 @@ class BookStore() :
         print("\n=== UPDATE BOOKS ===")
 
         try:
-            bookId = int(inquirer.text("Enter book ID to update: ", style = MENU_STYLE).execute())
+            bookId = int(inquirer.text("Enter book ID to update: ",
+                                       validate = isIntP,
+                                       invalid_message = "Please enter valid number",
+                                       style = MENU_STYLE).execute())
         except ValueError:
             print("Please enter a valid number")
             return
@@ -460,11 +481,11 @@ class BookStore() :
 
     def deleteBook(self):
         print("\n=== DELETE BOOK ===")
-        try:
-            bookId = int(inquirer.text("Enter book ID to delete: ", style = MENU_STYLE).execute())
-        except ValueError:
-            print("Please enter a valid number")
-            return
+
+        bookId = int(inquirer.text("Enter book ID to delete: ",
+                                    validate = isIntP,
+                                    invalid_message = "Please enter valid number",
+                                    style = MENU_STYLE).execute())
     
         book = self.executeQuery("""SELECT title FROM books WHERE book_id = %s""",
                                  (bookId,), fetch = True)
@@ -487,7 +508,7 @@ class BookStore() :
     def sellBook(self):
         print("\n=== SELL BOOK ===")
         bookId = int(inquirer.text("Enter book ID to sell: ",
-                                   validate = lambda x: x.isdigit() and int(x)>0,
+                                   validate = isIntP,
                                    invalid_message = "Please enter a valid number",
                                    style = MENU_STYLE).execute())
 
@@ -509,7 +530,7 @@ class BookStore() :
 
         
         quantitySold = int(inquirer.text("Enter quantity to sell: ",
-                                            validate = lambda x: x.isdigit() and int(x)>0,
+                                            validate = isIntP,
                                             invalid_message = "Please enter a valid number",
                                             style = MENU_STYLE).execute())
 
@@ -518,7 +539,7 @@ class BookStore() :
             return
         
         customerId = int(inquirer.text("Enter Customer ID: ",
-                                    validate = lambda x: x.isdigit() and int(x)>0,
+                                    validate = isIntP,
                                     invalid_message = "Please enter a valid number",
                                     style = MENU_STYLE).execute())
         
@@ -549,6 +570,9 @@ class BookStore() :
     def viewRevenueReport(self):
         print("\n=== COMPRENSIVE SALES REPORT ===")
 
+                                    # isent it cool it is just a 3 table joins
+                                    # and this DATE(s.sale_at) >= DATE_FORMAT(CURDATE(), '%Y-%m-01') makes it
+                                    # so that we only se this month's reports
         bookSales = self.executeQuery("""SELECT s.sale_at as sale_date, b.title, b.author, c.name as customer_name, s.quantity_sold, 
                                       s.unit_price, s.total_amount, 'Book Sale' as transaction_type
                                       FROM sales s
@@ -570,7 +594,7 @@ class BookStore() :
         allTransactions.sort(key = lambda x: x['sale_date'], reverse = True)
 
         print(f"\n{'Date':<12} {'Type':<20} {'Customer':<15} {'Qty':<4} {'Amount':<10}")
-        print("-" * 85)
+        print("-" * 65)
         totalSalesRevenue, totalBorrowingRevenue = 0, 0
 
         for transaction in allTransactions:
@@ -601,7 +625,7 @@ class BookStore() :
         print("-" * 75)
         totalSalesRevenue, totalBorrowingRevenue = 0, 0
         for sale in (bookSales or []):
-            print(f"{sale['sale_at'].strftime('%Y-%m-%d') or 'N/A':<12} {sale['title'][:19]<20} {sale['name'][:14]:<15} {sale['quantity_sold']:<4} ₹{sale['unit_price']:<7.2f} ₹{sale['total_amount']:<9.2f}")
+            print(f"{sale['sale_at'].strftime('%Y-%m-%d') or 'N/A':<12} {sale['title'][:19]:<20} {sale['name'][:14]:<15} {sale['quantity_sold']:<4} ₹{sale['unit_price']:<7.2f} ₹{sale['total_amount']:<9.2f}")
             totalSalesRevenue += sale['total_amount']
         print(f"\nTotal Book Sales Revenue: ₹{totalSalesRevenue:.2f}")
 
@@ -618,7 +642,7 @@ class BookStore() :
         print(f"\n{'Date':<12} {'Title':<20} {'Borrower':<15} {'Days':<4} {'Fine':<10}")
         print('-'*70)
         for item in (borrowingRevenue or []):
-            print(f"{item['return_at'].strftime('%Y-%m-%d'):<12} {item['title'][:19]:<20} {item['name'][:14]:<15} {item['days_overdue'] or 0:<4} ₹{item['total_amount']:<9.2f}")
+            print(f"{item['return_at'].strftime('%Y-%m-%d'):<12} {item['title'][:19]:<20} {item['name'][:14]:<15} {item['days_overdue'] if item['days_overdue'] > 0 else 0:<4} ₹{item['total_amount']:<9.2f}")
             totalBorrowingRevenue += item['total_amount']
         print(f"\nTotal Borrowing Revenue: ₹{totalBorrowingRevenue:.2f}")
 
@@ -632,7 +656,7 @@ class BookStore() :
     def borrowBook(self):
         print("\n=== BORROW BOOK ===")
         bookId= int(inquirer.text("Enter book ID to borrow: ",
-                                  validate = lambda x: x.isdigit() and int(x)>0,
+                                  validate = isIntP,
                                   invalid_message = "Please enter a valid number",
                                   style = MENU_STYLE).execute())
 
@@ -650,7 +674,7 @@ class BookStore() :
         print(f"Book: {book['title']} by {book['author']}")
 
         customerId = int(inquirer.text("Enter Customer ID: ",
-                                    validate = lambda x: x.isdigit() and int(x)>0,
+                                    validate = isIntP,
                                     invalid_message = "Please enter a valid number",
                                     style = MENU_STYLE).execute())
         
@@ -661,7 +685,7 @@ class BookStore() :
 
 
         borrowDays = int(inquirer.text("Enter number of days to borrow: ",
-                                        validate = lambda x: x.isdigit() and int(x)>0,
+                                        validate = isIntP,
                                         invalid_message = "Please enter a valid number",
                                         style = MENU_STYLE).execute())
 
@@ -687,7 +711,7 @@ class BookStore() :
         print("\n=== RETURN BORROWED BOOK ===")
 
         borrowId = int(inquirer.text("Enter borrow ID to return: ",
-                                        validate = lambda x: x.isdigit() and int(x)>0,
+                                        validate = isIntP,
                                         invalid_message = "Please enter a valid number",
                                         style = MENU_STYLE).execute())
 

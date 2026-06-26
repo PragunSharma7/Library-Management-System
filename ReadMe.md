@@ -42,11 +42,11 @@ mysql -u root -p < structure.sql
 ```
 
 #### Option B: Structure + Data
-Creates  the database, tables and provides sample data
+Creates  the database, tables and provides sample data.
 Go to the project file directory in command prompt and use the following command
 
 ```bash
-mysql -u root -p < sqldata.py
+mysql -u root -p < sqldata.sql
 ```
 
 ### 2. Configure Environment variables 
