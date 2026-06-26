@@ -1,53 +1,90 @@
 CREATE DATABASE IF NOT EXISTS bookstore;
 USE bookstore;
 
-DROP TABLE IF EXISTS borrowedbooksales;
-DROP TABLE IF EXISTS soldbooksales;
-DROP TABLE IF EXISTS borrowedbooks;
-DROP TABLE IF EXISTS availablebooks;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS borrowings;
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS returns;
 
-CREATE TABLE availablebooks (
-    book_id INT AUTO_INCREMENT PRIMARY KEY,
+
+
+CREATE TABLE customers (
+    customer_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE COLLATE utf8mb4_0900_ai_ci,
+    phone VARCHAR(20) UNIQUE COLLATE utf8mb4_0900_bin,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_customer_name (name),
+    INDEX idx_customer_email (email),
+    INDEX idx_customer_phone (phone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_cs;
+
+CREATE TABLE books (
+    book_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
-    isbn VARCHAR(20) UNIQUE NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
+    isbn VARCHAR(20) NOT NULL UNIQUE COLLATE utf8mb4_0900_bin,
+    price DECIMAL(10,2) NOT NULL,
     quantity INT NOT NULL DEFAULT 0,
-    genre VARCHAR(100)
-);
+    genre VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE borrowedbooks (
-    borrow_id INT AUTO_INCREMENT PRIMARY KEY,
-    book_id INT NOT NULL,
-    borrower_name VARCHAR(255) NOT NULL,
-    borrower_email VARCHAR(255),
-    borrower_phone VARCHAR(20),
-    borrow_date DATE NOT NULL,
-    due_date DATE NOT NULL
-);
+    INDEX idx_title (title),
+    INDEX idx_author (author),
+    INDEX idx_genre (genre),
+    INDEX idx_isbn (isbn)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_cs;
 
-CREATE TABLE soldbooksales (
-    sale_id INT AUTO_INCREMENT PRIMARY KEY,
-    book_id INT NOT NULL,
-    customer_name VARCHAR(255) NOT NULL,
-    customer_email VARCHAR(255),
+CREATE TABLE borrowings (
+    borrowing_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    book_id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL,
+    borrow_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    due_on DATETIME NOT NULL,
+
+    INDEX idx_book_id (book_id),
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_due_on (due_on),
+
+    FOREIGN KEY (book_id) REFERENCES books(book_id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_cs;
+
+CREATE TABLE sales (
+    sale_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    book_id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL,
     quantity_sold INT NOT NULL,
-    sale_date DATE DATE NOT NULL DEFAULT (CURRENT_DATE),
-    unit_price DECIMAL(10, 2) NOT NULL,
-    total_amount DECIMAL(10, 2) NOT NULL
-);
+    sale_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    unit_price DECIMAL(10,2) NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
 
-CREATE TABLE borrowedbooksales (
-    borrow_sale_id INT AUTO_INCREMENT PRIMARY KEY,
-    borrow_id INT NOT NULL,
-    book_id INT NOT NULL,
-    borrower_name VARCHAR(255) NOT NULL,
-    borrower_email VARCHAR(255),
-    borrower_phone VARCHAR(20),
-    borrow_date DATE NOT NULL,
-    due_date DATE NOT NULL,
-    return_date DATE NOT NULL,
-    fine_amount DECIMAL(10, 2) DEFAULT 0,
-    total_amount DECIMAL(10, 2) DEFAULT 0,
-    transaction_date DATE
-);
+    INDEX idx_book_id (book_id),
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_sale_at (sale_at),
+
+    FOREIGN KEY (book_id) REFERENCES books(book_id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_cs;
+
+CREATE TABLE returns (
+return_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    borrowing_id BIGINT NOT NULL,
+    book_id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL,
+    borrow_at DATETIME NOT NULL,
+    due_on DATETIME NOT NULL,
+    return_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fine_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+
+    INDEX idx_borrowing_id (borrowing_id),
+    INDEX idx_book_id (book_id),
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_return_at (return_at),
+
+    FOREIGN KEY (book_id) REFERENCES books(book_id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_cs;
