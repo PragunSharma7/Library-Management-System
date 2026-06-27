@@ -873,11 +873,11 @@ def main():
         print("Failed to connect. Please check the MySQL configurations")
         return
     
-    print("Welcome to Book Store Mannagement System")
+    print("Welcome to Library Mannagement System")
 
     while True:
         choice = inquirer.select(
-            message = "BOOK STORE MANAGEMENT SYSTEM",
+            message = "Library MANAGEMENT SYSTEM",
             choices = list(menu.keys()),
             default = 0,
             pointer = " ➤",
